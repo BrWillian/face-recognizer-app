@@ -25,9 +25,9 @@ logging.basicConfig(
 )
 
 
-@app.route('/api/face/recognizer', methods=['POST'])
+@app.route('/api/face/recognizer', methods=['POST', 'GET'])
 def recognizer():
-    try:
+    if request.method == "POST":
         imgb64 = request.data['image']
         image = np.fromstring(base64.b64decode(imgb64), np.uint8)
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
@@ -49,14 +49,12 @@ def recognizer():
 
             return make_response(jsonify({"name": face_name}), 200)
 
-    except Exception as e:
-        LOGGER.error(str(e))
-        return Response(status=500)
+    return {"Responde": "Face Recognition API"}
 
 
-@app.route('/api/face/add', methods=['POST'])
+@app.route('/api/face/add', methods=['POST', 'GET'])
 def add_face():
-    try:
+    if request.method == "POST":
         imgb64 = request.data['image']
         person_name = request.data["name"]
         image = np.fromstring(base64.b64decode(imgb64), np.uint8)
@@ -83,7 +81,5 @@ def add_face():
         face_recognizer.add_faces(face_list, label_list)
 
         return Response(status=201)
-    except Exception as e:
-        print(e)
-        LOGGER.error(str(e))
-        return Response(status=500)
+
+    return {"Responde": "Face Recognition API"}
