@@ -1,0 +1,10 @@
+services:
+  api:
+    build:  .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api:/api
+    environment:
+      FLASK_ENV: development
+    scale: 5
