@@ -1,0 +1,12 @@
+Flask-API
+Keras==2.4.0
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.2
+keras-vggface==0.6
+mtcnn==0.1.1
+numpy
+opencv-python
+Pillow==9.4.0
+protobuf==3.19.6
+scipy
+tensorflow==2.4.0
