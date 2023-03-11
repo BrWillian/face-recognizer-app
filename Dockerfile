@@ -11,6 +11,7 @@ COPY . /app
 
 RUN python -m pip install --upgrade pip
 RUN pip3 install --upgrade pip
+RUN pip3 cache purge
 RUN pip3 --no-cache-dir install -r requeriments.txt
 ENTRYPOINT ["python3"]
 CMD ["run.py"]
