@@ -9,17 +9,13 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 class VGGFaceRecognizer:
-    def __init__(self, model='resnet50'):
+    def __init__(self, model='senet50'):
         self.model = model
         self.face_dict = dict()
-
         self.recognizer = VGGFace(include_top=False, model=model)
 
-    def calculate_similarity(self, vector_1, vector_2):
-        if self.model == 'vgg16':
-            vector_1 = vector_1.flatten()
-            vector_2 = vector_2.flatten()
-
+    @staticmethod
+    def calculate_similarity(vector_1, vector_2):
         vector_1 = np.squeeze(vector_1)
         vector_2 = np.squeeze(vector_2)
 
@@ -43,23 +39,21 @@ class VGGFaceRecognizer:
         face = np.asarray(face).astype(np.float64)
         face = np.expand_dims(face, axis=0)
 
-        if self.model == 'vgg16':
-            face = preprocess_input(face, version=1)
-        else:
-            face = preprocess_input(face, version=2)
+        face = preprocess_input(face, version=2)
 
         return self.recognizer.predict(face)
 
-    def recognize(self, face, thresh=0.25):
+    def recognize(self, face: np.ndarray, list_of_faces: dict, thresh: float = 0.25):
         query_features = self.feature_extractor(face)
         temp_sim_dict = dict()
 
-        for key in self.face_dict.keys():
-            db_face_features = self.face_dict[key]
+        for key, value in list_of_faces.items():
+            db_face_features = np.array(value)
             score = self.calculate_similarity(
-                db_face_features, query_features
+                db_face_features.squeeze(), query_features
             )
             temp_sim_dict[key] = score
+            print(score)
 
         try:
             if min(temp_sim_dict.values()) > thresh:
@@ -70,9 +64,6 @@ class VGGFaceRecognizer:
         most_similar_face = min(temp_sim_dict, key=temp_sim_dict.get)
 
         return most_similar_face
-
-    def get_persons(self):
-        print(str(self.face_dict.keys()))
 
     @staticmethod
     def fix_coordinates(box: list, width: int, height: int):
