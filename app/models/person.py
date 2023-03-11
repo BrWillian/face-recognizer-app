@@ -17,11 +17,12 @@ class Person(db.Model):
     confirmed = Column("confirmed", Boolean)
     image_path = Column("path", String)
     face_attributes = Column("face_attributes", db.PickleType)
+    authenticated = Column("authenticated", Boolean)
     dt_confirmed = Column("dt_confirmed", DateTime)
     dt_created = Column("dt_created", DateTime)
     dt_updated = Column("dt_updated", DateTime)
 
-    def __init__(self, name, birthday, sex, phone, email, instagram, image_path, image):
+    def __init__(self, name, birthday, sex, phone, email, instagram, image_path, face_attributes):
         self.name = name
         self.birthday = birthday
         self.sex = sex
@@ -29,7 +30,8 @@ class Person(db.Model):
         self.email = email
         self.instagram = instagram
         self.image_path = image_path
-        self.face_attributes = pkl.dumps(image)
+        self.face_attributes = pkl.dumps(face_attributes)
         self.confirmed = False
+        self.authenticated = False
         self.dt_confirmed = datetime.now()
         self.dt_created = datetime.now()
