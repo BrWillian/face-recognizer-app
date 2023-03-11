@@ -2,6 +2,7 @@ from app import app
 from flask import request, make_response, Response
 from flask import jsonify
 from app.controllers.face_recognition import VGGFaceRecognizer
+from app.models.person import Person
 import cv2
 import base64
 import numpy as np
@@ -9,6 +10,7 @@ from mtcnn import MTCNN
 import os
 from PIL import Image
 import logging
+import pickle
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ logging.basicConfig(
 )
 
 
-@app.route('/api/face/recognizer', methods=['POST', 'GET'])
+@app.route('/api/face/recognizer', methods=['POST'])
 def recognizer():
     if request.method == "POST":
         imgb64 = request.data['image']
@@ -36,27 +38,32 @@ def recognizer():
 
         height, width, _ = image.shape
 
-        if len(detected_faces) > 1:
-            return Response(status=409)
-        else:
-            x1, y1, x2, y2 = VGGFaceRecognizer.fix_coordinates(detected_faces[0]['box'], width, height)
+        try:
+            face = max(detected_faces, key=lambda detected_face: detected_face['confidence'])
+            x1, y1, x2, y2 = VGGFaceRecognizer.fix_coordinates(face['box'], width, height)
             cropped_face = image[y1:y2, x1:x2]
 
             cropped_face = Image.fromarray(cropped_face)
 
+            db_faces = Person.query.all()
+
+            print(db_faces)
+
+            list_of_faces = {face.cd_person: pickle.loads(face.face_attributes) for face in db_faces}
+
             face_name = face_recognizer.recognize(
-                cropped_face, thresh=0.30)
+                cropped_face, list_of_faces, thresh=0.35)
 
-            return make_response(jsonify({"name": face_name}), 200)
+            return make_response(jsonify({"face_id": face_name}), 200)
+        except Exception as e:
+            LOGGER.error(e)
+            return Response(status=400)
 
-    return {"Responde": "Face Recognition API"}
 
-
-@app.route('/api/face/add', methods=['POST', 'GET'])
+@app.route('/api/face/get_attributes', methods=['POST'])
 def add_face():
     if request.method == "POST":
         imgb64 = request.data['image']
-        person_name = request.data["name"]
         image = np.fromstring(base64.b64decode(imgb64), np.uint8)
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
@@ -64,22 +71,17 @@ def add_face():
 
         height, width, _ = image.shape
 
-        face_list = list()
-        label_list = list()
-
-        if len(detected_faces) > 1:
-            return Response(status=409)
-        else:
-            x1, y1, x2, y2 = VGGFaceRecognizer.fix_coordinates(detected_faces[0]['box'], width, height)
+        try:
+            face = max(detected_faces, key=lambda detected_face: detected_face['confidence'])
+            x1, y1, x2, y2 = VGGFaceRecognizer.fix_coordinates(face['box'], width, height)
             cropped_face = image[y1:y2, x1:x2]
 
             cropped_face = Image.fromarray(cropped_face)
 
-            face_list.append(cropped_face)
-            label_list.append(person_name)
+            features = face_recognizer.feature_extractor(cropped_face)
 
-        face_recognizer.add_faces(face_list, label_list)
+            return make_response(jsonify({"face_attributes": features.squeeze().tolist()}), 200)
 
-        return Response(status=201)
-
-    return {"Responde": "Face Recognition API"}
+        except Exception as e:
+            LOGGER.error(e)
+            return Response(status=400)
