@@ -10,3 +10,7 @@ Pillow==9.4.0
 protobuf==3.19.6
 scipy
 tensorflow==2.4.0
+SQLAlchemy
+psycopg2-binary
+Flask-Migrate
+Flask-SQLAlchemy
