@@ -47,14 +47,12 @@ def recognizer():
 
             db_faces = Person.query.all()
 
-            print(db_faces)
-
             list_of_faces = {face.cd_person: pickle.loads(face.face_attributes) for face in db_faces}
 
             face_name = face_recognizer.recognize(
                 cropped_face, list_of_faces, thresh=0.35)
 
-            return make_response(jsonify({"face_id": face_name}), 200)
+            return make_response(jsonify({"face_id": face_name}), 200) if face_name else Response(status=400)
         except Exception as e:
             LOGGER.error(e)
             return Response(status=400)
