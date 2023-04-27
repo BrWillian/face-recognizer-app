@@ -3,6 +3,7 @@ from flask import request, make_response, Response
 from flask import jsonify
 from app.controllers.face_recognition import VGGFaceRecognizer
 from app.models.person import Person
+from app import db
 import cv2
 import base64
 import numpy as np
@@ -14,7 +15,7 @@ import pickle
 
 LOGGER = logging.getLogger(__name__)
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 mtcnn = MTCNN()
 face_recognizer = VGGFaceRecognizer(model='senet50')
 
@@ -45,7 +46,7 @@ def recognizer():
 
             cropped_face = Image.fromarray(cropped_face)
 
-            db_faces = Person.query.all()
+            db_faces = Person.query.filter(Person.face_attributes.is_not(None)).all()
 
             list_of_faces = {face.cd_person: pickle.loads(face.face_attributes) for face in db_faces}
 

@@ -48,22 +48,15 @@ class VGGFaceRecognizer:
         temp_sim_dict = dict()
 
         for key, value in list_of_faces.items():
-            db_face_features = np.array(value)
-            score = self.calculate_similarity(
-                db_face_features.squeeze(), query_features
-            )
-            temp_sim_dict[key] = score
-            print(score)
+            if isinstance(value, np.array):
+                db_face_features = np.array(value)
 
-        try:
-            if min(temp_sim_dict.values()) > thresh:
-                return None
-        except:
-            return None
+                score = self.calculate_similarity(
+                    db_face_features.squeeze(), query_features.flatten()
+                )
+                temp_sim_dict[key] = score
 
-        most_similar_face = min(temp_sim_dict, key=temp_sim_dict.get)
-
-        return most_similar_face
+        return None if min(temp_sim_dict.values()) > thresh else min(temp_sim_dict, key=temp_sim_dict.get)
 
     @staticmethod
     def fix_coordinates(box: list, width: int, height: int):
